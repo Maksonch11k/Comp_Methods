@@ -48,9 +48,6 @@ for (f, fname) in test_functions
     end
 end
 
-plot(plot_array..., layout=(3,1), size=(800, 1000))
-savefig("spline_approximations_comparison.png")
-
 header = ["Функция", "N", "Ошибка (Уменьш. вариации)", "Ошибка (Трехточ. функц.)"]
 data = Matrix{Any}(undef, length(results), 4)
 for (i, res) in enumerate(results)
