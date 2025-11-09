@@ -1,8 +1,13 @@
 export create_spline_basis_and_knots, calculate_three_point_coeffs, spline_eval
 
 function cox_de_boor(i::Int, k::Int, t::Float64, knots::Vector{Float64})
-    if k == 1
-        return (knots[i] <= t < knots[i+1]) ? 1.0 : 0.0
+   if k == 1
+        is_in_interval = (knots[i] <= t < knots[i+1])
+        if t == knots[end] && knots[i] <= t && knots[i+1] == knots[end]
+            return 1.0
+        end
+
+        return is_in_interval ? 1.0 : 0.0
     end
 
     term1 = 0.0
