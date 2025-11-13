@@ -33,27 +33,23 @@ function solve_fredholm_I_direct(K, g, a, b, n)
     k = 3 
   
     basis, knots, num_coeffs = create_spline_basis_and_knots(a, b, n, k)
+    mu = calculate_three_point_coeffs(g, a, b, n, k)
     
-    
-    colloc_pts = [(knots[i+1]+knots[i+2])/2.0 for i in 1:num_coeffs] 
-    g_vec = g.(colloc_pts)
+    colloc_pts = [(knots[i+1]+knots[i+2]+knots[i+3])/3.0 for i in 1:num_coeffs]
     
     M = zeros(num_coeffs, num_coeffs)
     for i in 1:num_coeffs
         for j in 1:num_coeffs
             integrand(t) = K(colloc_pts[i], t) * basis[j](t)
-            M[i, j] = quadgk(integrand, a, b)[1]
+            M[i, j] = quadgk(integrand, a, b, rtol=1e-8)[1]
         end
     end
 
+    c = pinv(M) * mu
     
-    c = pinv(M) * g_vec
-    
-  
-    u_h(t) = spline_eval(t, c, knots, k)
-    return u_h
+    y_h(t) = sum(c[i] * basis[i](t) for i in 1:num_coeffs)
+    return y_h
 end
-
 
 function solve_fredholm_I_regularized(K, g, a, b, n, alpha)
     k = 3 
@@ -67,7 +63,7 @@ function solve_fredholm_I_regularized(K, g, a, b, n, alpha)
     for i in 1:num_coeffs
         for j in 1:num_coeffs
             integrand(t) = K(colloc_pts[i], t) * basis[j](t)
-            M[i, j] = quadgk(integrand, a, b)[1]
+            M[i, j] = quadgk(integrand, a, b,rtol=1e-8)[1]
         end
     end
     

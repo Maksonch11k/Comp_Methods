@@ -1,6 +1,6 @@
 using Plots
 using QuadGK
-
+using Printf
 include("fredholm_solvers.jl")
 include("volterra_solver.jl")
 
@@ -39,31 +39,28 @@ savefig(p1_2, "fredholm_II_ex2.png")
 println("\n\n--- Часть 2: Уравнение Фредгольма I рода ---")
 
 
-K_2_1(t, x) = exp(-(t - x)^2)
-u_exact_2_1(t) = 1 + sin(2π*t)
-g_2_1(t) = quadgk(x -> K_2_1(t, x) * u_exact_2_1(x), 0.0, 1.0)[1]
+K_2_1(s, t) = t <= s ? 2 : 0
+u_exact_2_1(s) = 1
+g_2_1(s) = 2s
 a_2_1, b_2_1 = 0.0, 1.0
-n_2_1 = 40
-g_noisy_2_1(t) = g_2_1(t) + 1e-4 * randn()
-t_plot_2_1 = range(a_2_1, stop=b_2_1, length=200)
+n_2_1 = 10
+t_plot_2_1 = range(a_2_1, stop=b_2_1, length=100)
 
 println("\n--- Пример 2.1: Гауссово ядро ---")
-alphas_to_test_1 = [1e-8]
+alpha = 0.1
 errors_1 = []
 exact_vals_2_1 = u_exact_2_1.(t_plot_2_1)
+u_approx_func = solve_fredholm_I_regularized(K_2_1, g_2_1, a_2_1, b_2_1, n_2_1, alpha)
+current_error = maximum(abs.(exact_vals_2_1 .- u_approx_func.(t_plot_2_1)))
+u_approx_func_direct = solve_fredholm_I_direct(K_2_1, g_2_1, a_2_1, b_2_1, n_2_1)
+current_error_direct = maximum(abs.(exact_vals_2_1 .- u_approx_func_direct.(t_plot_2_1)))
+println("Максимальная ошибка при методе регуляризации = $current_error")
+println("Максимальная ошибка при прямом методе ", @sprintf("%.4f", current_error_direct))
 
-for alpha in alphas_to_test_1
-    u_approx_func = solve_fredholm_I_regularized(K_2_1, g_noisy_2_1, a_2_1, b_2_1, n_2_1, alpha)
-    current_error = maximum(abs.(exact_vals_2_1 .- u_approx_func.(t_plot_2_1)))
-    push!(errors_1, current_error)
-end
-min_error_1, best_idx_1 = findmin(errors_1)
-best_alpha_1 = alphas_to_test_1[best_idx_1]
-println("Максимальная ошибка = $min_error_1")
 
-best_u_approx_1 = solve_fredholm_I_regularized(K_2_1, g_noisy_2_1, a_2_1, b_2_1, n_2_1, best_alpha_1)
+best_u_approx_1 = solve_fredholm_I_regularized(K_2_1, g_2_1, a_2_1, b_2_1, n_2_1, alpha)
 p2_1_reg = plot(t_plot_2_1, u_exact_2_1, label="Точное решение", lw=2)
-plot!(p2_1_reg, t_plot_2_1, best_u_approx_1, label="Решение (alpha=$best_alpha_1)", ls=:dash)
+plot!(p2_1_reg, t_plot_2_1, best_u_approx_1, label="Решение (alpha=1e-8)", ls=:dash)
 savefig(p2_1_reg, "fredholm_I_regularized_1.png")
 
 println("\n--- Пример 2.2: Ядро cos(t*x) ---")
@@ -71,23 +68,20 @@ K_2_2(t, x) = cos(t * x)
 u_exact_2_2(t) = 1.0 + t
 g_2_2(t) = quadgk(x -> K_2_2(t, x) * u_exact_2_2(x), 0.0, 1.0)[1]
 a_2_2, b_2_2 = 0.0, 1.0
-n_2_2 = 40
-g_noisy_2_2(t) = g_2_2(t) + 1e-4 * randn()
-alphas_to_test_2 = [1e-8]
+n_2_2 = 10
+alpha = 1e-8
 errors_2 = []
 t_plot_2_2 = range(a_2_2, stop=b_2_2, length=200)
 exact_vals_2_2 = u_exact_2_2.(t_plot_2_2)
-for alpha in alphas_to_test_2
-    u_approx_func =  solve_fredholm_I_regularized(K_2_2, g_noisy_2_2, a_2_2, b_2_2, n_2_2, alpha)
-    current_error = maximum(abs.(exact_vals_2_2 .- u_approx_func.(t_plot_2_2)))
-    push!(errors_2, current_error)
-end
-min_error_2, best_idx_2 = findmin(errors_2)
-best_alpha_2 = alphas_to_test_2[best_idx_2]
-println("Максимальная ошибка = $min_error_2")
-best_u_approx_2 = solve_fredholm_I_regularized(K_2_2, g_noisy_2_2, a_2_2, b_2_2, n_2_2, best_alpha_2)
+u_approx_func =  solve_fredholm_I_regularized(K_2_2, g_2_2, a_2_2, b_2_2, n_2_2, alpha)
+current_error = maximum(abs.(exact_vals_2_2 .- u_approx_func.(t_plot_2_2)))
+u_approx_func_direct_2 = solve_fredholm_I_direct(K_2_2, g_2_2, a_2_2, b_2_2, n_2_2)
+current_error_direct_2 = maximum(abs.(exact_vals_2_2 .- u_approx_func_direct_2.(t_plot_2_2)))
+println("Максимальная ошибка при методе регуляризации = $current_error")
+println("Максимальная ошибка при прямом методе ", @sprintf("%.4f", current_error_direct_2))
+best_u_approx_2 = solve_fredholm_I_regularized(K_2_2, g_2_2, a_2_2, b_2_2, n_2_2, alpha)
 p2_2 = plot(t_plot_2_2, u_exact_2_2, label="Точное решение", lw=2)
-plot!(p2_2, t_plot_2_2, best_u_approx_2, label="Решение (alpha=$best_alpha_2)", ls=:dash, lw=2)
+plot!(p2_2, t_plot_2_2, best_u_approx_2, label="Решение (alpha=$alpha)", ls=:dash, lw=2)
 title!("Часть 2, Пример 2")
 savefig(p2_2, "fredholm_I_regularized_2.png")
 
