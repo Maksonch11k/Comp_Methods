@@ -79,12 +79,6 @@ def decompress_image(input_path, output_path):
     img = Image.fromarray(matrix)
     img.save(output_path)
 
-def bad_matrix(m, n):
-    i = np.arange(m).reshape(-1, 1)
-    j = np.arange(n).reshape(1, -1)
-    A = (i * j) % 256
-    return A.astype(float)
-
 def calculate_difference_metric(s1, s2):
     a = np.sort(s1)
     b = np.sort(s2)
